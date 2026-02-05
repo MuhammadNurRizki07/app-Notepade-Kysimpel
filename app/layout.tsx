@@ -1,5 +1,5 @@
 import React from "react"
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Geist } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
@@ -8,15 +8,16 @@ import { ThemeProvider as NextThemesProvider } from '@/components/theme-provider
 
 const geist = Geist({ subsets: ["latin"] });
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+}
+
 export const metadata: Metadata = {
   title: 'KySimpel - Catatan & Link Belajar',
   description: 'Aplikasi catatan dan link pembelajaran yang menarik',
   generator: 'v0.app',
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1,
-  },
   icons: {
     icon: [
       {
@@ -43,7 +44,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="id" suppressHydrationWarning>
-      <body className={`${geist.className} font-sans antialiased`}>
+      <body className={`${geist.className} font-sans antialiased`} suppressHydrationWarning>
         <NextThemesProvider>
           <ThemeProvider>
             {children}
