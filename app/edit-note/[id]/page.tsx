@@ -32,6 +32,7 @@ export default function EditNotePage() {
   const [content, setContent] = useState('');
   const [externalLink, setExternalLink] = useState('');
   const [category, setCategory] = useState('Umum');
+  const [customCategory, setCustomCategory] = useState('');
   const [selectedColor, setSelectedColor] = useState<'blue' | 'pink' | 'green' | 'yellow' | 'purple'>('blue');
   const [error, setError] = useState('');
 
@@ -43,7 +44,13 @@ export default function EditNotePage() {
       setTitle(foundNote.title);
       setContent(foundNote.content);
       setExternalLink(foundNote.externalLink || '');
-      setCategory(foundNote.category);
+      if (categories.includes(foundNote.category)) {
+        setCategory(foundNote.category);
+        setCustomCategory('');
+      } else {
+        setCategory('__other');
+        setCustomCategory(foundNote.category);
+      }
       setSelectedColor(foundNote.color);
     }
   }, [id]);
@@ -67,7 +74,7 @@ export default function EditNotePage() {
       ...note,
       title: title.trim(),
       content: content.trim(),
-      category,
+      category: category === '__other' ? (customCategory.trim() || 'Umum') : category,
       color: selectedColor,
       externalLink: externalLink.trim() || undefined,
       updatedAt: Date.now(),
@@ -172,7 +179,18 @@ export default function EditNotePage() {
                   {cat}
                 </option>
               ))}
+              <option value="__other">Tambahin Lainnya (Sebutkan)</option>
             </select>
+
+            {category === '__other' && (
+              <input
+                type="text"
+                placeholder="Ketik kategori lain..."
+                value={customCategory}
+                onChange={(e) => setCustomCategory(e.target.value)}
+                className="w-full mt-2 px-3 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-card text-foreground placeholder:text-muted-foreground"
+              />
+            )}
           </div>
 
           {/* Color Picker */}

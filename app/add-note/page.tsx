@@ -28,6 +28,7 @@ export default function AddNotePage() {
   const [content, setContent] = useState('');
   const [externalLink, setExternalLink] = useState('');
   const [category, setCategory] = useState('Umum');
+  const [customCategory, setCustomCategory] = useState('');
   const [selectedColor, setSelectedColor] = useState<'blue' | 'pink' | 'green' | 'yellow' | 'purple'>('blue');
   const [error, setError] = useState('');
 
@@ -48,7 +49,7 @@ export default function AddNotePage() {
       id: Math.random().toString(36).substr(2, 9),
       title: title.trim(),
       content: content.trim(),
-      category,
+      category: category === '__other' ? (customCategory.trim() || 'Umum') : category,
       color: selectedColor,
       externalLink: externalLink.trim() || undefined,
       createdAt: Date.now(),
@@ -144,7 +145,18 @@ export default function AddNotePage() {
                   {cat}
                 </option>
               ))}
+              <option value="__other">Tambahin Lainnya (Sebutkan)</option>
             </select>
+
+            {category === '__other' && (
+              <input
+                type="text"
+                placeholder="Ketik kategori lain..."
+                value={customCategory}
+                onChange={(e) => setCustomCategory(e.target.value)}
+                className="w-full mt-2 px-3 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-card text-foreground placeholder:text-muted-foreground"
+              />
+            )}
           </div>
 
           {/* Color Picker */}

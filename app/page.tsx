@@ -84,8 +84,8 @@ export default function Home() {
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-foreground text-balance">{note.title}</h3>
-                    <p className="text-sm text-foreground line-clamp-3 mt-1">{note.content}</p>
+                    <h3 className="font-bold text-slate-900 text-balance">{note.title}</h3>
+                    <p className="text-sm text-slate-700 line-clamp-3 mt-1">{note.content}</p>
                   </div>
                   <div className="flex gap-1 flex-shrink-0">
                     <Link
@@ -93,14 +93,14 @@ export default function Home() {
                       className="p-2 hover:bg-white/50 rounded transition-colors"
                       title="Edit"
                     >
-                      <Edit2 className="w-4 h-4 text-foreground" />
+                      <Edit2 className="w-4 h-4 text-slate-600" />
                     </Link>
                     <button
                       onClick={() => handleDelete(note.id)}
                       className="p-2 hover:bg-white/50 rounded transition-colors"
                       title="Delete"
                     >
-                      <Trash2 className="w-4 h-4 text-foreground" />
+                      <Trash2 className="w-4 h-4 text-slate-600" />
                     </button>
                   </div>
                 </div>
@@ -120,7 +120,7 @@ export default function Home() {
                   )}
                 </div>
 
-                <p className="text-xs text-foreground/70">
+                <p className="text-xs text-slate-500">
                   {new Date(note.createdAt).toLocaleDateString('id-ID', {
                     day: 'numeric',
                     month: 'short',
