@@ -29,10 +29,11 @@ export default function EditNotePage() {
 
   const [note, setNote] = useState<Note | null>(null);
   const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
+  const [sections, setSections] = useState<Array<{id:string; title:string; body:string; status: 'Baru'|'Proses'|'Selesai'}>>([
+    { id: Math.random().toString(36).substr(2,9), title: 'Pertemuan 1', body: '', status: 'Baru' }
+  ]);
   const [externalLink, setExternalLink] = useState('');
-  const [category, setCategory] = useState('Umum');
-  const [customCategory, setCustomCategory] = useState('');
+  const [status, setStatus] = useState<'Baru'|'Proses'|'Selesai'>('Baru');
   const [selectedColor, setSelectedColor] = useState<'blue' | 'pink' | 'green' | 'yellow' | 'purple'>('blue');
   const [error, setError] = useState('');
 
@@ -42,15 +43,15 @@ export default function EditNotePage() {
     if (foundNote) {
       setNote(foundNote);
       setTitle(foundNote.title);
-      setContent(foundNote.content);
       setExternalLink(foundNote.externalLink || '');
-      if (categories.includes(foundNote.category)) {
-        setCategory(foundNote.category);
-        setCustomCategory('');
-      } else {
-        setCategory('__other');
-        setCustomCategory(foundNote.category);
+      // load sections (backward compatible with older `content` field)
+      const anySections = (foundNote as any).sections as any[] | undefined;
+      if (anySections && Array.isArray(anySections) && anySections.length > 0) {
+        setSections(anySections.map(s => ({ id: s.id || Math.random().toString(36).substr(2,9), title: s.title || 'Pertemuan', body: s.body || '', status: s.status || 'Baru' })));
+      } else if ((foundNote as any).content) {
+        setSections([{ id: Math.random().toString(36).substr(2,9), title: 'Pertemuan 1', body: (foundNote as any).content || '', status: 'Baru' }]);
       }
+      setStatus((foundNote as any).status || 'Baru');
       setSelectedColor(foundNote.color);
     }
   }, [id]);
@@ -63,7 +64,7 @@ export default function EditNotePage() {
       return;
     }
 
-    if (!content.trim()) {
+    if (sections.length === 0 || !sections.some(s => s.body && s.body.trim())) {
       setError('Isi catatan tidak boleh kosong');
       return;
     }
@@ -73,8 +74,8 @@ export default function EditNotePage() {
     const updatedNote: Note = {
       ...note,
       title: title.trim(),
-      content: content.trim(),
-      category: category === '__other' ? (customCategory.trim() || 'Umum') : category,
+      sections: sections.map(s => ({ ...s })),
+      status,
       color: selectedColor,
       externalLink: externalLink.trim() || undefined,
       updatedAt: Date.now(),
@@ -138,19 +139,72 @@ export default function EditNotePage() {
             />
           </div>
 
-          {/* Content Input */}
+          {/* Sections (pertemuan/chatbox) */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Isi Catatan</label>
-            <textarea
-              placeholder="Tulis catatanmu di sini..."
-              value={content}
-              onChange={(e) => {
-                setContent(e.target.value);
-                setError('');
-              }}
-              rows={6}
-              className="w-full px-3 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary resize-none bg-card text-foreground placeholder:text-muted-foreground"
-            />
+            <label className="text-sm font-medium text-foreground">Isi Catatan (Pertemuan)</label>
+            <div className="space-y-3">
+              {sections.map((s, idx) => (
+                <div key={s.id} className="p-3 bg-card border border-input rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-3">
+                      <div className="font-medium">{s.title}</div>
+                      <div className="flex items-center gap-2">
+                        {(['Baru','Proses','Selesai'] as const).map(st => (
+                          <button
+                            key={st}
+                            type="button"
+                            onClick={() => {
+                              const next = [...sections];
+                              next[idx] = { ...next[idx], status: st };
+                              setSections(next);
+                            }}
+                            className={`text-xs px-2 py-1 rounded-full border ${s.status === st ? 'bg-primary text-primary-foreground border-primary' : 'bg-transparent text-foreground'}`}
+                          >
+                            {st}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      {sections.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSections(prev => prev.filter((_, i) => i !== idx).map((sec, i) => ({ ...sec, title: `Pertemuan ${i+1}` })));
+                          }}
+                          className="text-sm text-red-500"
+                        >
+                          Hapus
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  <textarea
+                    placeholder={`Isi untuk ${s.title}`}
+                    value={s.body}
+                    onChange={(e) => {
+                      const next = [...sections];
+                      next[idx] = { ...next[idx], body: e.target.value };
+                      setSections(next);
+                      setError('');
+                    }}
+                    rows={4}
+                    className="w-full px-3 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary resize-none bg-card text-foreground placeholder:text-muted-foreground"
+                  />
+                </div>
+              ))}
+
+              <button
+                type="button"
+                onClick={() => {
+                  setSections(prev => [...prev, { id: Math.random().toString(36).substr(2,9), title: `Pertemuan ${prev.length+1}`, body: '', status: 'Baru' }]);
+                }}
+                className="inline-flex items-center gap-2 px-3 py-2 bg-muted rounded-lg text-sm"
+              >
+                + Tambah Pertemuan
+              </button>
+            </div>
           </div>
 
           {/* External Link Input */}
@@ -166,31 +220,18 @@ export default function EditNotePage() {
             <p className="text-xs text-muted-foreground">Contoh: Google Classroom, GitHub, YouTube, dll</p>
           </div>
 
-          {/* Category Select */}
+          {/* Overall Status */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Kategori</label>
+            <label className="text-sm font-medium text-foreground">Status Pengerjaan</label>
             <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
+              value={status}
+              onChange={(e) => setStatus(e.target.value as any)}
               className="w-full px-3 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-card text-foreground"
             >
-              {categories.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
-              <option value="__other">Tambahin Lainnya (Sebutkan)</option>
+              <option value="Baru">Baru</option>
+              <option value="Proses">Proses</option>
+              <option value="Selesai">Selesai</option>
             </select>
-
-            {category === '__other' && (
-              <input
-                type="text"
-                placeholder="Ketik kategori lain..."
-                value={customCategory}
-                onChange={(e) => setCustomCategory(e.target.value)}
-                className="w-full mt-2 px-3 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-card text-foreground placeholder:text-muted-foreground"
-              />
-            )}
           </div>
 
           {/* Color Picker */}

@@ -1,10 +1,17 @@
 export type Theme = 'blue' | 'peach' | 'dark';
 
+export interface Section {
+  id: string;
+  title: string;
+  body: string;
+  status: 'Baru' | 'Proses' | 'Selesai';
+}
+
 export interface Note {
   id: string;
   title: string;
-  content: string;
-  category: string;
+  sections: Section[];
+  status: 'Baru' | 'Proses' | 'Selesai';
   color: 'blue' | 'pink' | 'green' | 'yellow' | 'purple';
   externalLink?: string;
   createdAt: number;

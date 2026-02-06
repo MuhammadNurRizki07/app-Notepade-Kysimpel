@@ -26,6 +26,25 @@ export const storage = {
       notes.push(note);
     }
     localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
+    // If note contains an externalLink, add it to favorite links (avoid duplicate URLs)
+    try {
+      const url = (note as any).externalLink;
+      if (url && typeof url === 'string') {
+        const existing = storage.getLinks().find(l => l.url === url);
+        if (!existing) {
+          const link: FavoriteLink = {
+            id: Math.random().toString(36).substr(2,9),
+            title: note.title || 'Link',
+            url,
+            category: 'other',
+            createdAt: Date.now(),
+          };
+          storage.saveLink(link);
+        }
+      }
+    } catch {
+      // ignore link save errors
+    }
   },
 
   deleteNote: (id: string): void => {

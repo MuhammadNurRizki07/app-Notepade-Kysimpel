@@ -25,12 +25,13 @@ const colorDisplay = {
 export default function AddNotePage() {
   const router = useRouter();
   const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
+  const [sections, setSections] = useState<Array<{id:string; title:string; body:string; status: 'Baru'|'Proses'|'Selesai'}>>([
+    { id: Math.random().toString(36).substr(2, 9), title: 'Pertemuan 1', body: '', status: 'Baru' }
+  ]);
   const [externalLink, setExternalLink] = useState('');
-  const [category, setCategory] = useState('Umum');
-  const [customCategory, setCustomCategory] = useState('');
   const [selectedColor, setSelectedColor] = useState<'blue' | 'pink' | 'green' | 'yellow' | 'purple'>('blue');
   const [error, setError] = useState('');
+  const [status, setStatus] = useState<'Baru'|'Proses'|'Selesai'>('Baru');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,7 +41,7 @@ export default function AddNotePage() {
       return;
     }
 
-    if (!content.trim()) {
+    if (sections.length === 0 || !sections.some(s => s.body && s.body.trim())) {
       setError('Isi catatan tidak boleh kosong');
       return;
     }
@@ -48,8 +49,8 @@ export default function AddNotePage() {
     const newNote: Note = {
       id: Math.random().toString(36).substr(2, 9),
       title: title.trim(),
-      content: content.trim(),
-      category: category === '__other' ? (customCategory.trim() || 'Umum') : category,
+      sections: sections.map(s => ({ ...s })),
+      status,
       color: selectedColor,
       externalLink: externalLink.trim() || undefined,
       createdAt: Date.now(),
@@ -104,19 +105,69 @@ export default function AddNotePage() {
             />
           </div>
 
-          {/* Content Input */}
+          {/* Sections (pertemuan/chatbox) */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Isi Catatan</label>
-            <textarea
-              placeholder="Tulis catatanmu di sini..."
-              value={content}
-              onChange={(e) => {
-                setContent(e.target.value);
-                setError('');
-              }}
-              rows={6}
-              className="w-full px-3 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary resize-none bg-card text-foreground placeholder:text-muted-foreground"
-            />
+            <label className="text-sm font-medium text-foreground">Isi Catatan (Pertemuan)</label>
+            <div className="space-y-3">
+              {sections.map((s, idx) => (
+                <div key={s.id} className="p-3 bg-card border border-input rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-3">
+                      <div className="font-medium">{s.title}</div>
+                      <select
+                        value={s.status}
+                        onChange={(e) => {
+                          const next = [...sections];
+                          next[idx] = { ...next[idx], status: e.target.value as any };
+                          setSections(next);
+                        }}
+                        className="text-xs px-2 py-1 border rounded bg-transparent"
+                      >
+                        <option value="Baru">Baru</option>
+                        <option value="Proses">Proses</option>
+                        <option value="Selesai">Selesai</option>
+                      </select>
+                    </div>
+                    <div className="flex gap-2">
+                      {sections.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSections(prev => prev.filter((_, i) => i !== idx).map((sec, i) => ({ ...sec, title: `Pertemuan ${i+1}` })));
+                          }}
+                          className="text-sm text-red-500"
+                        >
+                          Hapus
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  <textarea
+                    placeholder={`Isi untuk ${s.title}`}
+                    value={s.body}
+                    onChange={(e) => {
+                      const next = [...sections];
+                      next[idx] = { ...next[idx], body: e.target.value };
+                      setSections(next);
+                      setError('');
+                    }}
+                    rows={4}
+                    className="w-full px-3 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary resize-none bg-card text-foreground placeholder:text-muted-foreground"
+                  />
+                </div>
+              ))}
+
+              <button
+                type="button"
+                onClick={() => {
+                  setSections(prev => [...prev, { id: Math.random().toString(36).substr(2,9), title: `Pertemuan ${prev.length+1}`, body: '', status: 'Baru' }]);
+                }}
+                className="inline-flex items-center gap-2 px-3 py-2 bg-muted rounded-lg text-sm"
+              >
+                + Tambah Pertemuan
+              </button>
+            </div>
           </div>
 
           {/* External Link Input */}
@@ -132,31 +183,18 @@ export default function AddNotePage() {
             <p className="text-xs text-muted-foreground">Contoh: Google Classroom, GitHub, YouTube, dll</p>
           </div>
 
-          {/* Category Select */}
+          {/* Overall Status */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Kategori</label>
+            <label className="text-sm font-medium text-foreground">Status Pengerjaan</label>
             <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
+              value={status}
+              onChange={(e) => setStatus(e.target.value as any)}
               className="w-full px-3 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-card text-foreground"
             >
-              {categories.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
-              <option value="__other">Tambahin Lainnya (Sebutkan)</option>
+              <option value="Baru">Baru</option>
+              <option value="Proses">Proses</option>
+              <option value="Selesai">Selesai</option>
             </select>
-
-            {category === '__other' && (
-              <input
-                type="text"
-                placeholder="Ketik kategori lain..."
-                value={customCategory}
-                onChange={(e) => setCustomCategory(e.target.value)}
-                className="w-full mt-2 px-3 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-card text-foreground placeholder:text-muted-foreground"
-              />
-            )}
           </div>
 
           {/* Color Picker */}

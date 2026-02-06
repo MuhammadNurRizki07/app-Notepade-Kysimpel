@@ -17,7 +17,7 @@ const colorClasses = {
   purple: 'bg-purple-100 border-l-4 border-purple-500',
 };
 
-const categoryBadgeClass = 'inline-block px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-700';
+// status badge styles will vary depending on note.status
 
 export default function Home() {
   const [notes, setNotes] = useState<Note[]>([]);
@@ -85,7 +85,8 @@ export default function Home() {
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
                     <h3 className="font-bold text-slate-900 text-balance">{note.title}</h3>
-                    <p className="text-sm text-slate-700 line-clamp-3 mt-1">{note.content}</p>
+                    <p className="text-sm text-slate-700 line-clamp-2 mt-1">{(note as any).sections?.[0]?.title || ''}</p>
+                    <p className="text-sm text-slate-700 line-clamp-3 mt-1">{(note as any).sections?.[0]?.body || ''}</p>
                   </div>
                   <div className="flex gap-1 flex-shrink-0">
                     <Link
@@ -106,7 +107,10 @@ export default function Home() {
                 </div>
 
                 <div className="flex items-center flex-wrap gap-2">
-                  <span className={categoryBadgeClass}>{note.category}</span>
+                  {/** status badge */}
+                  <span className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${
+                    note.status === 'Baru' ? 'bg-blue-100 text-blue-700' : note.status === 'Proses' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'
+                  }`}>{note.status}</span>
                   {note.externalLink && (
                     <a
                       href={note.externalLink}

@@ -41,10 +41,11 @@ export default function StatisticsPage() {
   const totalNotes = notes.length;
   const totalLinks = links.length;
 
-  // Top Categories
+  // Top Status
   const categoryStats: Record<string, number> = {};
   notes.forEach(note => {
-    categoryStats[note.category] = (categoryStats[note.category] || 0) + 1;
+    const key = (note as any).status || 'Baru';
+    categoryStats[key] = (categoryStats[key] || 0) + 1;
   });
 
   const topCategories: CategoryStats[] = Object.entries(categoryStats)
